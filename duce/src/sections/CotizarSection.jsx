@@ -2,13 +2,50 @@
 import { WHATSAPP_URL } from '../config'
 
 const PHONE = '+52 664 504 1753'
-// EMAIL ya no se expone en el frontend
 
 const CONTACT_ROWS = [
-  { icon: '💬', label: 'WhatsApp', sub: 'Respuesta inmediata', href: WHATSAPP_URL },
-  { icon: '📞', label: 'Teléfono', sub: PHONE, href: `tel:${PHONE}` },
-  { icon: '✉️', label: 'Correo', sub: 'Escríbenos por este formulario', href: null },
-  { icon: '📍', label: 'Cobertura', sub: 'Tijuana y zona metropolitana', href: null },
+  { 
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+      </svg>
+    ), 
+    label: 'WhatsApp', 
+    sub: 'Respuesta inmediata', 
+    href: WHATSAPP_URL 
+  },
+  { 
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+      </svg>
+    ), 
+    label: 'Teléfono', 
+    sub: PHONE, 
+    href: `tel:${PHONE}` 
+  },
+  { 
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+        <polyline points="22,6 12,13 2,6"/>
+      </svg>
+    ), 
+    label: 'Correo', 
+    sub: 'Escríbenos por este formulario', 
+    href: null 
+  },
+  { 
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+    ), 
+    label: 'Cobertura', 
+    sub: 'Tijuana y zona metropolitana', 
+    href: null 
+  },
 ]
 
 const STATUS = {
@@ -26,8 +63,6 @@ export default function CotizarSection() {
   const [details, setDetails] = useState('')
   const [status, setStatus] = useState(STATUS.IDLE)
   const [errorMsg, setErrorMsg] = useState('')
-
-  // Honeypot: campo invisible para bots — no lo toques
   const [trap, setTrap] = useState('')
 
   const handleSubmit = async (event) => {
@@ -52,7 +87,7 @@ export default function CotizarSection() {
           email,
           workType,
           details,
-          _trap: trap, // honeypot
+          _trap: trap,
         }),
       })
 
@@ -79,7 +114,7 @@ export default function CotizarSection() {
 
   return (
     <section id="cotizar" className="bg-white py-24 scroll-mt-16">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#CC1111' }}>
           Hablemos de tu obra
         </p>
@@ -101,6 +136,7 @@ export default function CotizarSection() {
                 key={c.label}
                 className="flex items-center gap-4 p-4 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors"
               >
+                {/* Contenedor del Icono */}
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0"
                   style={{ backgroundColor: '#CC1111' }}
@@ -125,7 +161,7 @@ export default function CotizarSection() {
           {status === STATUS.SUCCESS ? (
             <div className="flex flex-col items-center justify-center gap-4 text-center py-12">
               <div
-                className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl"
+                className="w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl font-bold"
                 style={{ backgroundColor: '#CC1111' }}
               >
                 ✓
@@ -145,7 +181,7 @@ export default function CotizarSection() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-              {/* Honeypot — invisible para humanos, bots lo llenan */}
+              {/* Honeypot */}
               <div style={{ position: 'absolute', left: '-9999px', opacity: 0, pointerEvents: 'none' }} aria-hidden="true">
                 <input
                   type="text"
@@ -176,8 +212,8 @@ export default function CotizarSection() {
                     Teléfono *
                   </label>
                   <input
-                    type="tel"
-                    placeholder="55 5555 5555"
+                    type="text"
+                    placeholder="664 555 5555"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className={inputClass}
@@ -252,7 +288,8 @@ export default function CotizarSection() {
                 {status === STATUS.LOADING ? 'Enviando...' : 'Solicitar cotización'}
               </button>
 
-              <p className="text-gray-400 text-xs text-center">
+              {/* Ajustado a text-gray-500 para mayor legibilidad */}
+              <p className="text-gray-500 text-xs text-center">
                 Al enviar aceptas ser contactado por Bombeos Duce.
               </p>
             </form>
