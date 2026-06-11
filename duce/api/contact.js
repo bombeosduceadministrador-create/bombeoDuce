@@ -41,10 +41,11 @@ export default async function handler(req, res) {
     'http://localhost:3000',
   ].filter(Boolean)
 
-  if (!allowedOrigins.includes(origin)) {
-    return res.status(403).json({ error: 'Origen no permitido' })
-  }
 
+const originAllowed = allowedOrigins.some(allowed => origin.startsWith(allowed))
+if (!originAllowed) {
+  return res.status(403).json({ error: 'Origen no permitido' })
+}
   res.setHeader('Access-Control-Allow-Origin', origin)
   res.setHeader('Access-Control-Allow-Methods', 'POST')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
