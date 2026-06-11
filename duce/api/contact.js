@@ -1,22 +1,18 @@
-import { Resend } from 'resend'
-
-const resend = new Resend(process.env.RESEND_API_KEY)
+import nodemailer from 'nodemailer'
 
 const ALLOWED_WORK_TYPES = ['Residencial', 'Comercial', 'Industrial', '']
 
 function sanitize(str = '') {
   return String(str)
     .trim()
-    .replace(/[&<>"'\/]/g, (char) => {
-      return {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;',
-        '/': '&#x2F;',
-      }[char]
-    })
+    .replace(/[&<>"'\/]/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+      '/': '&#x2F;',
+    }[char]))
     .slice(0, 500)
 }
 
@@ -29,11 +25,6 @@ function isValidPhone(phone) {
 }
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método no permitido' })
-  }
-
-  // CORS — solo tu dominio
   const origin = req.headers.origin || ''
   const allowedOrigins = [
     process.env.ALLOWED_ORIGIN,
@@ -41,18 +32,33 @@ export default async function handler(req, res) {
     'http://localhost:3000',
   ].filter(Boolean)
 
+  const originAllowed = allowedOrigins.some((allowed) => origin.startsWith(allowed))
+  if (!originAllowed) {
+    return res.status(403).json({ error: 'Origen no permitido' })
+  }
 
-const originAllowed = allowedOrigins.some(allowed => origin.startsWith(allowed))
-if (!originAllowed) {
-  return res.status(403).json({ error: 'Origen no permitido' })
-}
   res.setHeader('Access-Control-Allow-Origin', origin)
-  res.setHeader('Access-Control-Allow-Methods', 'POST')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end()
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Método no permitido' })
+  }
+
+  const requiredEnv = ['GMAIL_USER', 'GMAIL_APP_PASSWORD', 'CONTACT_EMAIL']
+  const missingEnv = requiredEnv.filter((name) => !process.env[name])
+  if (missingEnv.length > 0) {
+    console.error('[contact] Faltan variables de entorno:', missingEnv.join(', '))
+    return res.status(500).json({ error: 'Configuración del servidor incompleta' })
+  }
 
   const { name, phone, email, workType, details, _trap } = req.body
 
-  // Honeypot: si tiene contenido, es un bot
+  // Honeypot
   if (_trap && _trap.trim() !== '') {
     return res.status(200).json({ ok: true })
   }
@@ -65,7 +71,6 @@ if (!originAllowed) {
   const cleanDetails = sanitize(details)
 
   const errors = []
-
   if (!cleanName || cleanName.length < 2) errors.push('Nombre inválido')
   if (!cleanPhone || !isValidPhone(cleanPhone)) errors.push('Teléfono inválido')
   if (cleanEmail && !isValidEmail(cleanEmail)) errors.push('Correo electrónico inválido')
@@ -81,12 +86,22 @@ if (!originAllowed) {
     req.socket?.remoteAddress ||
     'unknown'
 
+  // Transporter de Gmail
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  })
+
   try {
-    await resend.emails.send({
-      from: 'Formulario Web <noreply@bombeosduce.com>',
+    await transporter.sendMail({
+      from: `"Formulario Bombeos Duce" <${process.env.GMAIL_USER}>`,
       to: process.env.CONTACT_EMAIL,
-      replyTo: cleanEmail || undefined,
+      replyTo: cleanEmail || process.env.GMAIL_USER,
       subject: `Nueva cotización: ${cleanWorkType || 'Sin tipo'} — ${cleanName}`,
+      text: `Nueva solicitud de cotización\n\nNombre: ${cleanName}\nTeléfono: ${cleanPhone}\n${cleanEmail ? `Correo: ${cleanEmail}\n` : ''}${cleanWorkType ? `Tipo de obra: ${cleanWorkType}\n` : ''}${cleanDetails ? `Detalles:\n${cleanDetails}\n` : ''}\nIP: ${ip}\nFecha: ${new Date().toLocaleString('es-MX', { timeZone: 'America/Tijuana' })}`,
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
           <h2 style="color: #CC1111; margin-bottom: 4px;">Nueva solicitud de cotización</h2>
