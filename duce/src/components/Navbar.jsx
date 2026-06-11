@@ -1,6 +1,4 @@
 import { useState } from 'react'
-
-import { useState } from 'react'
 import { WHATSAPP_URL } from '../config'
 
 const NAV_LINKS = [
